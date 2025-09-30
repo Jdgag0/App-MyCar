@@ -1,0 +1,5 @@
+date,odometer_km,liters,price_per_liter,total_cost,station,fuel_type,notes,full_tank
+2025-09-10,75005,,23.99,,Shell,,Tanque lleno (sin ticket),True
+2025-09-14,75374,38.31,23.99,919.0,Shell,,Tanque lleno,True
+2025-09-21,75813,20.84,23.99,500.0,Pemex,,¼ → ¾ (parcial),False
+2025-09-28,76105,39.93,23.99,958.0,Shell,,Reserva → lleno,True
