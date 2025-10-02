@@ -25,16 +25,26 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.joel.mycar.core.di.ServiceLocator
 import com.joel.mycar.feature.fuel.ui.*
+import com.joel.mycar.feature.maintenance.domain.MaintenanceRepository
+import com.joel.mycar.feature.maintenance.ui.MaintenanceFormScreen
+import com.joel.mycar.feature.maintenance.ui.MaintenanceListScreen
+import com.joel.mycar.feature.maintenance.ui.MaintenanceVMFactory
+import com.joel.mycar.feature.maintenance.ui.MaintenanceViewModel
+import com.joel.mycar.ui.HomeScreen
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.InputStreamReader
 
 sealed class Screen(val route: String) {
-    data object Dashboard : Screen("dashboard")
+    data object Home : Screen("home")
+    data object FuelDashboard : Screen("fuel_dashboard")
     data object FuelAdd  : Screen("fuel_add")
     data object FuelEdit : Screen("fuel_edit/{id}")   // ← con parámetro
     data object FuelList : Screen("fuel_list")
+    data object MaintenanceList : Screen("maintenance_list")
+    data object MaintenanceAdd : Screen("maintenance_add")
+    data object MaintenanceEdit : Screen("maintenance_edit/{id}")
 }
 
 class MainActivity : ComponentActivity() {
@@ -50,6 +60,9 @@ class MainActivity : ComponentActivity() {
                 val db = ServiceLocator.database(this)
                 val vm: RefuelViewModel = viewModel(
                     factory = RefuelVMFactory(db.refuelDao(), db.monthlyStatDao())
+                )
+                val maintenanceVM: MaintenanceViewModel = viewModel(
+                    factory = MaintenanceVMFactory(MaintenanceRepository(db.maintenanceTaskDao()))
                 )
                 // Seed desde assets (solo 1 vez)
                 LaunchedEffect(Unit) {
@@ -74,12 +87,18 @@ class MainActivity : ComponentActivity() {
                 ) { innerPadding ->
                     NavHost(
                         navController = nav,
-                        startDestination = Screen.Dashboard.route,
+                        startDestination = Screen.Home.route,
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(innerPadding) // ← evita que la app bar tape el contenido
                     ) {
-                        composable(Screen.Dashboard.route) {
+                        composable(Screen.Home.route) {
+                            HomeScreen(
+                                toFuel = { nav.navigate(Screen.FuelDashboard.route) },
+                                toMaintenance = { nav.navigate(Screen.MaintenanceList.route) }
+                            )
+                        }
+                        composable(Screen.FuelDashboard.route) {
                             DashboardScreen(
                                 fuelVM = vm,
                                 toAddFuel = { nav.navigate(Screen.FuelAdd.route) },
@@ -105,6 +124,31 @@ class MainActivity : ComponentActivity() {
                             EditRefuelScreen(viewModel = vm, id = id) {
                                 nav.popBackStack()
                             }
+                        }
+                        composable(Screen.MaintenanceList.route) {
+                            MaintenanceListScreen(
+                                viewModel = maintenanceVM,
+                                onAdd = { nav.navigate(Screen.MaintenanceAdd.route) },
+                                onTaskClick = { id -> nav.navigate("maintenance_edit/$id") }
+                            )
+                        }
+                        composable(Screen.MaintenanceAdd.route) {
+                            MaintenanceFormScreen(
+                                viewModel = maintenanceVM,
+                                taskId = null,
+                                onDone = { nav.popBackStack() }
+                            )
+                        }
+                        composable(
+                            route = Screen.MaintenanceEdit.route,
+                            arguments = listOf(navArgument("id") { type = NavType.LongType })
+                        ) { backStack ->
+                            val id = backStack.arguments?.getLong("id")
+                            MaintenanceFormScreen(
+                                viewModel = maintenanceVM,
+                                taskId = id,
+                                onDone = { nav.popBackStack() }
+                            )
                         }
                     }
                 }
