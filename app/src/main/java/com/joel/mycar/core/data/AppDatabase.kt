@@ -6,16 +6,20 @@ import com.joel.mycar.feature.fuel.data.MonthlyStatDao
 import com.joel.mycar.feature.fuel.data.RefuelDao
 import com.joel.mycar.feature.fuel.domain.MonthlyStat
 import com.joel.mycar.feature.fuel.domain.Refuel
+import com.joel.mycar.feature.maintenance.data.MaintenanceTaskDao
+import com.joel.mycar.feature.maintenance.domain.MaintenanceTask
 
 @Database(
     entities = [
         Refuel::class,
-        MonthlyStat::class
+        MonthlyStat::class,
+        MaintenanceTask::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun refuelDao(): RefuelDao
     abstract fun monthlyStatDao(): MonthlyStatDao
+    abstract fun maintenanceTaskDao(): MaintenanceTaskDao
 }
